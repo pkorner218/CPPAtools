@@ -3,6 +3,8 @@
 ****
 # aberrant protein prediction pipeline
 
+## please note that the s4pred and lib folders shoud be decompressed (they are .tar compressed) in place before starting pipeline
+
 
 # 1 get_validated_fasta.py
 Since many translation fasta files show problematic inconsistencies to their transcript counterparts, this script ensures that both are the same.
