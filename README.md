@@ -39,6 +39,6 @@ usage: `count_domains.py [-h] -idf INPUTDOMAINFILE -iff INPUTFASTAFILE -o OUTFIL
 
 # 6 form_secondary_structures.py
 calculates secondary structure differences for a given aberrant fasta file using s4pred
-#usage: form_secondary_structures.py [-h] -i INPUT -o OUTFILENAME [-of OUTPUTFORMAT]
+usage: `form_secondary_structures.py [-h] -i INPUT -o OUTFILENAME [-of OUTPUTFORMAT]`
 
 
