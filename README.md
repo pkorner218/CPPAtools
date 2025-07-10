@@ -5,6 +5,12 @@
 
 please note that the lib folders should be decompressed (it is .tar compressed) in place before starting pipeline
 
+s4pred can be downloaded from 
+`https://github.com/psipred/s4pred`
+
+InterProScan can be obtained from 
+`https://interproscan-docs.readthedocs.io/en/v5/HowToDownload.html`
+
 
 # 1 get_validated_fasta.py
 Since many translation fasta files show problematic inconsistencies to their transcript counterparts, this script ensures that both are the same.
