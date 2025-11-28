@@ -1,7 +1,7 @@
-# APPAtools
+# CPPAtools
 
 ****
-# aberrant protein prediction pipeline
+# A computation toolset for Chimera Protein Prediction and Analysis 
 
 please note that the lib folders should be decompressed (it is .tar compressed) in place before starting pipeline
 
