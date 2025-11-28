@@ -1,4 +1,4 @@
-# aberrant_proteins_pipeline
+# APPAtools
 
 ****
 # aberrant protein prediction pipeline
