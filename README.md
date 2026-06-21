@@ -44,10 +44,6 @@ usage: `main_get_chemproperties.py [-h] -i INPUT -o OUTFILENAME [-p PROPERTIES]`
 uses the aberrant fasta file and splits it into a set of numbers. Allows to make subsequent analysis faster and reduce memory problems on certain analysis such as InterProScan.
 usage: `separate_fasta.py [-h] [-n NUMBER_ENTRIES] -i INPUTFASTAFILE -ipp INTERPROSCANPATH`
 
-# 5  count_domains.py 
-counts domains provided by InterProscan. It references them back to a given aberrant input fastafile and compares domain numbers of aberrant and WT proteins.  
-usage: `count_domains.py [-h] -idf INPUTDOMAINFILE -iff INPUTFASTAFILE -o OUTFILENAME`
-
-# 6 form_secondary_structures.py
+# 5 form_secondary_structures.py
 calculates secondary structure differences for a given aberrant fasta file using s4pred. these can then be visualized and be further analyzed.
 #usage: form_secondary_structures.py [-h] -i INPUT -o OUTFILENAME [-of OUTPUTFORMAT]
