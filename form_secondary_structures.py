@@ -21,6 +21,21 @@ def header2dict(header, cond):
 		FSdir = header.split("|")[2]
 		descr = header.split("_")[-2]
 
+		condition = "aberrant"
+
+		if "Ctrl_" in header:
+			condition = "ctrl"
+
+		if "exon" in header:
+			condition = "mutation"
+
+		if "_pos" in header:
+			condition = "_".join([condition,header.split("_pos")[1].split("_")[0]])
+
+		if "_FILEpos" in header:
+			condition = "FILEpos"
+######################################
+
 		if "|" in descr:
 			FSpos = descr.split("|")[0]
 		else:
@@ -31,7 +46,7 @@ def header2dict(header, cond):
 			FSpos = int(FSpos)
 			FSpos = str(int(FSpos/ 3))
 
-		return {"header":header, "ID":ID, "Gene":Gene, "FSdir": FSdir, "FSpos": FSpos, "mca": mca, "WT": False}
+		return {"header":header, "ID":ID, "Gene":Gene, "FSdir": FSdir, "FSpos": FSpos, "mca": mca, "WT": False, "condition":condition}
 
 def read_secstrucfile(headerdict, filelines):
 
@@ -78,7 +93,7 @@ def matchconfidence(confidencelist, letterlist):
 
 	return fracC, fracH, fracE
 
-def compare(compositiondict, WTdict):
+def compare(compositiondict, WTdict, args):
 
 	headerdict = header2dict(list(compositiondict.keys())[0], "")
 	WTheaderdict = header2dict(list(WTdict.keys())[0], "WT")
@@ -120,9 +135,9 @@ def loop_seqs(fastadict, args):
 	outfile = open(outfilename, "w")
 
 	if args.outputformat == "diff":
-		outfile.write("ID\tAApos\tGene\tdiff_Coil\tdiff_Helix\tdiff_E_turn\tafter_diff_Coil\tafter_diff_Helix\tafter_diff_E_turn\tOriginalID\n")
+		outfile.write("ID\tAApos\tGene\tdiff_Coil\tdiff_Helix\tdiff_E_turn\tafter_diff_Coil\tafter_diff_Helix\tafter_diff_E_turn\tOriginalID\tcondition\n")
 	else:
-		outfile.write("ID\tAApos\tGene\tAB_Coil\tWT_Coil\tAB_Helix\tWT_Helix\tAB_Eturn\tWT_Eturn\tOriginalID\n")
+		outfile.write("ID\tAApos\tGene\tAB_Coil\tWT_Coil\tAB_Helix\tWT_Helix\tAB_Eturn\tWT_Eturn\tOriginalID\tcondition\n")
 
 	for header, seq in fastadict.items():
 
@@ -162,15 +177,17 @@ def loop_seqs(fastadict, args):
 
 			compositiondict = read_secstrucfile(headerdict, filelines2)
 
-			fracdiffs = compare(compositiondict, WTcompositiondict)
+			fracdiffs = compare(compositiondict, WTcompositiondict, args)
 			headerdict = header2dict(list(compositiondict.keys())[0], "")
+
+#			print(headerdict["condition"])
 
 			if fracdiffs != None:  # write out.
 
 				if args.outputformat == "diff":
-					outline = "\t".join([headerdict["ID"][1:], headerdict["FSpos"],headerdict["Gene"],fracdiffs[0], fracdiffs[1], fracdiffs[2] ,fracdiffs[3], fracdiffs[4], fracdiffs[5], headerdict["header"][1:]])
+					outline = "\t".join([headerdict["ID"][1:], headerdict["FSpos"],headerdict["Gene"],fracdiffs[0], fracdiffs[1], fracdiffs[2] ,fracdiffs[3], fracdiffs[4], fracdiffs[5], headerdict["header"][1:], headerdict["condition"]])
 				else:
-					outline = "\t".join([headerdict["ID"][1:], headerdict["FSpos"],headerdict["Gene"],fracdiffs[0], fracdiffs[1], fracdiffs[2] ,fracdiffs[3], fracdiffs[4], fracdiffs[5],fracdiffs[6], fracdiffs[7], fracdiffs[7] ,fracdiffs[9], fracdiffs[10], fracdiffs[11], headerdict["header"][1:]])
+					outline = "\t".join([headerdict["ID"][1:], headerdict["FSpos"],headerdict["Gene"],fracdiffs[0], fracdiffs[1], fracdiffs[2] ,fracdiffs[3], fracdiffs[4], fracdiffs[5],fracdiffs[6], fracdiffs[7], fracdiffs[7] ,fracdiffs[9], fracdiffs[10], fracdiffs[11], headerdict["header"][1:], headerdict["condition"]])
 				outfile.write(outline)
 				outfile.write("\n")
 	outfile.close()
@@ -192,13 +209,11 @@ def main():
 	parser = argparse.ArgumentParser()
 	allparsers.parser_get_secstruc(parser)
 	args = parser.parse_args()
-
 	fastadict = basictools.get_fastadict(args.input)
 
 	loop_seqs(fastadict, args)
 
 main()
-
 
 
 
