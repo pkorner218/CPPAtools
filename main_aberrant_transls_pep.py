@@ -8,11 +8,15 @@ import math
 import random
 import tempfile
 import logging
+import json
 
 from lib import basictools
 from lib import allparsers
 from lib import aberranttranslation
 from lib import call_transvar
+
+def is_vcf_mode(args):
+	return str(args.translation_error).replace("-", "_") == "vcf_file"
 
 def exec_function(input_key, *params):
 
@@ -42,7 +46,6 @@ def validate_TSV_REF(REFdict,infilename, reftype):
 
 	validTSVids = {}
 	nonvalidTSVids = []
-
 
 	if reftype == "given": # check that given ref file has unique headers
 
@@ -90,7 +93,7 @@ def validate_TSV_REF(REFdict,infilename, reftype):
 		elif ID in geneREFids:
 			header = list(ID_gene_REFdict[ID].keys())[0]
 
-			if ID not in validTSVids:
+			if header not in validTSVids:
 				validTSVids[header] = [[int(pos),int(pos)]]
 			else:
 				validTSVids[header].append([int(pos),int(pos)])
@@ -227,12 +230,15 @@ def aberrant_header_names(header, abpos, mainseq, newseq, args):
 	elif args.position_string_type == "regex":
 		positionstr = "pos" + str(mainseq[abpos[0]:abpos[1]]) + "_" + str(position) + "_" + args.mRNA_codon_aminoacid
 
+	elif args.position_string_type == "FILEpos":
+		positionstr = "FILEpos_" + str(position) + "_" + args.mRNA_codon_aminoacid
+
 	elif "pos" not in args.position_string_type:
 		positionstr = "pos" + args.position_string + "_" + str(position) + "_" + args.mRNA_codon_aminoacid
 	else:
 		positionstr = args.position_string + "_" + args.mRNA_codon_aminoacid
 
-	if "aberrantsequence" in args:
+	if hasattr(args, "aberrantsequence") and args.aberrantsequence is not None:
 		if len(args.aberrantsequence) > 10:
 			aberstr = args.aberrantsequence[:3] + "." + str(len(args.aberrantsequence)-6) + "." + args.aberrantsequence[len(args.aberrantsequence)-3:]
 		else:
@@ -308,14 +314,8 @@ def aberrant_header_names(header, abpos, mainseq, newseq, args):
 		for keyname in TRremovs:
 			del newheaders[keyname]
 
-	if args.position_string_type == "FILEpos":
-		removs = []
-		for key in newheaders.keys():
-			if "FILEpos_FILE_" in key:
-				removs.append(key)
-		for keyname in removs:
-			del newheaders[keyname]
-
+	# FILEpos headers now include the numeric position directly, e.g.
+	# frameshift_+1_FILEpos_FILEpos_123_mRNA. Do not delete FILEpos headers here.
 	return newheaders
 
 
@@ -576,7 +576,8 @@ def second_iteration(premaindictcopy, args):
 			WTname = baseheader + "|WT"
 			WTonly.append(WTname)
 
-	[premaindictcopy.pop(singlekey) for singlekey in WTonly]
+	for singlekey in WTonly:
+		premaindictcopy.pop(singlekey, None)
 
 	return premaindictcopy
 
@@ -584,7 +585,7 @@ def prepwriteout(args, temp, controldict):
 
 	outdict = {}
 
-	if args.sequencelength != False:
+	if args.sequencelength not in (False, None):
 		premaindict = filter_AB_seqlength(args, basictools.get_fastadict(temp.name))
 	else:
 		premaindict = basictools.get_fastadict(temp.name)
@@ -595,7 +596,7 @@ def prepwriteout(args, temp, controldict):
 		controldict2 = runcontrols2(args, premaindict)
 		premaindict.update(controldict2) ## adds controls to temp fastafile
 
-	if args.translation_error != 'mutation' and args.translation_error != 'vcf-file':
+	if args.translation_error != 'mutation' and not is_vcf_mode(args):
 
 		seconditerationstring =  "Removing WT headers without associated aberrant header"
 		logging.info(seconditerationstring)
@@ -739,12 +740,17 @@ def runmeta(temp, temp2, args):
 	outfilename = args.outfilename.split("/")[-1]
 
 	if "/" in args.outfilename:
-		 metaoutname = args.outfilename.split(".")[0] + "_meta.txt" 
+		metaoutname = args.outfilename.split(".")[0] + "_meta.txt"
+		logfileoutname = args.outfilename.split(".")[0] + "_logfile.txt"
 	else:
 		cwd = os.getcwd()
 		metapath = cwd + "/aberr_fasta/metadata/" #######
 		mkdir_meta(metapath)
 		metaoutname = metapath + outfilename.split(".")[0] + "_meta.txt"
+
+		logfileoutname = metapath + outfilename.split(".")[0] + "_logfile.txt"
+
+	logfile = open(logfileoutname, "w")
 
 	metaoutfile = open(metaoutname, "w")
 	metaoutfile.write("ID\tGene\tlength_WT\tlength_aberrant\tdescription\taberrant_position\tspacepassed\tUTR3\tminimimumlength_passed\tPeptide_created\n")
@@ -806,10 +812,18 @@ def runmeta(temp, temp2, args):
 		metaoutfile.write(outstring)
 		metaoutfile.write("\n")
 
-	metaoutfile.write(" ".join(["#total_peptides = ",str(totalpeptidescounts),"\n"]))
-	metaoutfile.write(" ".join(["#peptides_included = ",str(peptideincludedcounts),"\n"]))
-	metaoutfile.write(" ".join(["#peptides_passing_minimum_length = " ,str(minlenpassedcounts),"\n"]))
-	metaoutfile.write(" ".join(["#peptides_longer_than_WT = ", str(UTR3counts),"\n"]))
+
+
+	logfile.write("Arguments:\n")
+	logfile.write(json.dumps(vars(args), indent=4))
+	logfile.write("\n")
+
+	logfile.write(f"#total_peptides = {totalpeptidescounts}\n")
+	logfile.write(f"#peptides_included = {peptideincludedcounts}\n")
+	logfile.write(f"#peptides_passing_minimum_length = {minlenpassedcounts}\n")
+	logfile.write(f"#peptides_longer_than_WT = {UTR3counts}\n")
+
+	logfile.close()
 
 	metaoutfile.close()
 
@@ -937,17 +951,18 @@ def main():
 			basictools.write_fasta_to_temp(temp, aberrantdict, "aminoacid")
 
 			args.aminoacid_outlevel = ""
-			args.metadata = None
+			args.metadata = False
 			args.trimm = False
 
-		elif args.translation_error == "vcf_file":
+		elif is_vcf_mode(args):
 			if args.input.endswith(".vcf"): ### vcf file disable ...
+				args.controltype = None				
 				args.mRNA_codon_aminoacid = "mRNA"
 				args.codon_aware = False
 				aberrantdict = call_transvar.vcf_mt(args.input, "")
 				logging.info("vcf mutations mapped")
 				args.aminoacid_outlevel = ""
-				args.metadata = None
+				args.metadata = False
 				args.trimm = False
 
 				basictools.write_fasta_to_temp(temp, aberrantdict, "aminoacid")
@@ -977,7 +992,7 @@ def main():
 			posdict = {}
 			logging.info("Fasta dict created")
 #####################
-		if args.translation_error != 'mutation' and args.translation_error != "vcf_file": 
+		if str(args.translation_error) != 'mutation' and not is_vcf_mode(args): 
 			aberrant_translation_file(temp, temp2, args, fastadict, posdict)
 
 	else: 				# input is a single sequence
@@ -993,12 +1008,11 @@ def main():
 	temp.seek(0)
 	temp2.seek(0)
 
-	if args.metadata != False: ### if you want metadata
+	if args.metadata not in (False, None): ### if you want metadata
 		runmeta(temp, temp2, args) # creates metadata file and writes it
 		logging.info("Metadata file finished")
 
-	if args.translation_error != 'mutation' and args.translation_error != 'vcf-file':
-
+	if str(args.translation_error) != 'mutation' and not is_vcf_mode(args):
 		if args.controltype != None: ### if you want controls
 			controldict = runcontrols1(temp, args, fastadict)
 			outdict = prepwriteout(args, temp, controldict) ### 
@@ -1033,4 +1047,3 @@ def main():
 	temp2.close()
 
 main()
-
