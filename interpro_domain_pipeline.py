@@ -5,6 +5,7 @@ import logging
 import sqlite3
 import time
 import logging
+import argparse
 
 from collections import defaultdict
 
@@ -221,7 +222,7 @@ def parse_raw_interpro(raw_tsv, proteins=None, extracted_output=None):
 					fspos = parse_fspos_from_header(protein_id) ######parse_fspos_from_header header2dict(header, cond)
 				region = mappos(fspos, start, end) if fspos is not None else "NA"
 
-			feature = { "featureid": featureid "database": database, "accession": accession, "featurename": featurename, "start": start, "end": end, "featurelength": featurelength, "evalue": evalue, "region": region, "length": str(length), "lengthbin": lengthbin, "enst": enst, "gene": gene }
+			feature = { "featureid": featureid, "database": database, "accession": accession, "featurename": featurename, "start": start, "end": end, "featurelength": featurelength, "evalue": evalue, "region": region, "length": str(length), "lengthbin": lengthbin, "enst": enst, "gene": gene}
 			features[protein_id].append(feature)
 
 			if extracted_output is not None:
@@ -507,7 +508,7 @@ def main():
 	logging.info("start run")
 	logging.info("reading FASTA")
 
-	parser=argparse.ArgumentParser()
+	parser = argparse.ArgumentParser()
 	allparsers.parser_domain_pipeline(parser)
 	args = parser.parse_args()
 	proteins = parse_fasta(args.fasta)
