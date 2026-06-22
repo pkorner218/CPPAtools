@@ -1,0 +1,14 @@
+Database	FeatureClass	Weight
+CDD	Domain	0.6354
+Pfam	Domain	0.3582
+Gene3D	Domain	0.2810
+PANTHER	Domain	0.2988
+PIRSF	Domain	0.3080
+SMART	Domain	0.4176
+SUPERFAMILY	Domain	0.4841
+PRINTS	Motif	0.0078
+ProSiteProfiles	Motif	0.8255
+ProSitePatterns	Motif	0.4798
+TMHMM	Transmembrane	0.8492
+Coils	CoiledCoil	0.1789
+MobiDBLite	Disorder	0.5009
