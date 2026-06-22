@@ -165,21 +165,6 @@ python3 separate_fasta.py
 for fasta in dom/*fa; do echo $fasta; bash interproscan.sh; done
 
 
-#
-# combine output and compare
-#
-python3 count_domains.py 
-
-#usage: count_domains.py [-h] -idf INPUTDOMAINFILE -iff INPUTFASTAFILE -o OUTFILENAME
-#
-#options:
-##  -h, --help            show this help message and exit
- # -idf INPUTDOMAINFILE, --inputdomainfile INPUTDOMAINFILE
-#                        inputfile (tsv format)
-#  -iff INPUTFASTAFILE, --inputfastafile INPUTFASTAFILE
-#                        inputfile (tsv format)
-#  -o OUTFILENAME, --outfilename OUTFILENAME
-#                        name of the outfile to create
 
 ######################################
 
@@ -204,4 +189,23 @@ python3 form_secondary_structures.py
 #                        'original' confidence values
 
 ######################################
+
+python3 property_statistics.py
+
+# takes input from previous scripts (domains, secondary structure, pdb align, chemical properties )
+# output is global and per oof statistics
+
+#usage: property_statistics.py [-h] -i INPUT -o OUTFILENAME -t
+#                              {chemproperties,secondary_structure,secondary_structure_diff,pdb_tmalign,domains}
+
+#options:
+#  -h, --help            show this help message and exit
+#  -i INPUT, --input INPUT
+#                        inputfile
+#  -o OUTFILENAME, --outfilename OUTFILENAME
+#                        name of the outfile to create (automatic ending will be attached)
+#  -t {chemproperties,secondary_structure,secondary_structure_diff,pdb_tmalign,domains}, --inputtype {chemproperties,secondary_structure,secondary_structure_diff,pdb_tmalign,domains}
+#                        indicate the datatype of your inputfile [chemproperties],[secondary_structure],
+#                        [secondary_structure_diff], [pdb_tmalign]
+
 
