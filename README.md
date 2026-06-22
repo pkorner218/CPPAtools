@@ -11,6 +11,9 @@ s4pred can be downloaded from
 InterProScan can be obtained from 
 `https://interproscan-docs.readthedocs.io/en/v5/HowToDownload.html`
 
+TMalign can be obtained from 
+`https://zhanggroup.org/TM-align/`
+
 
 # 1 get_validated_fasta.py
 Since many translation fasta files show problematic inconsistencies to their transcript counterparts, this script ensures that both are the same.
@@ -42,8 +45,43 @@ usage: `main_get_chemproperties.py [-h] -i INPUT -o OUTFILENAME [-p PROPERTIES]`
 
 # 4 separate_fasta.py
 uses the aberrant fasta file and splits it into a set of numbers. Allows to make subsequent analysis faster and reduce memory problems on certain analysis such as InterProScan.
+
 usage: `separate_fasta.py [-h] [-n NUMBER_ENTRIES] -i INPUTFASTAFILE -ipp INTERPROSCANPATH`
 
 # 5 form_secondary_structures.py
 calculates secondary structure differences for a given aberrant fasta file using s4pred. these can then be visualized and be further analyzed.
-#usage: form_secondary_structures.py [-h] -i INPUT -o OUTFILENAME [-of OUTPUTFORMAT]
+
+usage: `form_secondary_structures.py [-h] -i INPUT -o OUTFILENAME [-of OUTPUTFORMAT]`
+
+# 6 pdb_tmalign.py
+scans a directory of pdb files for wt anf oof pairs. then runs TMalign on them and reports the scores as well as confidence scores stored int he pdb file
+
+usage: `pdb_tmalign_analysis.py [-h] -d INPUTDIR -o OUTFILENAME`
+
+# 7 interpro_domain_pipeline.py
+extracts from an InterPRoScan file all domain predictions for wt and oof seuqnece pairs, counts them and already included information of background enrichment (no statistics yet). 
+
+usage:  `interpro_domain_pipeline.py [-h] -i INPUT -f FASTA -d DATABASE -c
+                                   COUNT_MATRIX -o OUTPUT
+                                   [--extracted-output EXTRACTED_OUTPUT]
+interpro_domain_pipeline.py: error: the following arguments are required: -i/--input, -f/--fasta, -d/--database, -c/--count-matrix, -o/--output `
+
+# 8 property_statistics.py
+Adds global statistics (effect size, confidence intervals) and per sequence statistics (adjusted pvalue, rank) to a file.
+
+usage: `property_statistics.py [-h] -i INPUT -o OUTFILENAME -t
+                              {chemproperties,secondary_structure,secondary_structure_diff,pdb_tmalign,domains}`
+                              
+# 9 domain_background_weighting_statistics_consensus.py
+Takes a per_oof_statistics.tsv file as input and calculates enrichment over the background model as well as rank based on tool weights. then returns ranked oof headers with weighted consensus score. 
+
+usage: `domain_background_weighting_statistics_consensus.py [-h] -i INPUTFILE
+                                                           -o OUTFILENAME -w
+                                                           WEIGHTS
+                                                           [--score_absent_background]
+                                                           [--absent_effect_per_copy ABSENT_EFFECT_PER_COPY]
+                                                           [--absent_pvalue ABSENT_PVALUE]
+                                                           [--consensus_group_column CONSENSUS_GROUP_COLUMN]
+                                                           [--feature_summary_level {feature_id,consensus_group}]
+                                                           [--use_alternative_tool_weight_score]`
+
